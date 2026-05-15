@@ -516,7 +516,7 @@ class Handler(SimpleHTTPRequestHandler):
 
 
 def main():
-    host = "127.0.0.1"
+    host = "0.0.0.0"
     port = 5000
     server = ThreadingHTTPServer((host, port), Handler)
     print(f"Serving model-backed app at http://{host}:{port}")
