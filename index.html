@@ -1,0 +1,2015 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriChain — Market Price Prediction</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0f0d;
+      --surface: #111a15;
+      --surface2: #162019;
+      --border: #1e2e22;
+      --green: #22c55e;
+      --green-dim: #16a34a;
+      --green-glow: rgba(34, 197, 94, 0.15);
+      --amber: #f59e0b;
+      --red: #ef4444;
+      --blue: #3b82f6;
+      --text: #e2f0e6;
+      --text-dim: #6b8a72;
+      --text-muted: #3d5244;
+      --accent: #4ade80;
+      --chain: #1e3a4c;
+      --chain-border: #2563eb;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Background Grid ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(34, 197, 94, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(34, 197, 94, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Header ── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10, 15, 13, 0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.3rem;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .logo-icon {
+      font-size: 1.4rem;
+    }
+
+    .header-meta {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-align: right;
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.25);
+      border-radius: 999px;
+      padding: 0.2rem 0.6rem;
+      font-size: 0.65rem;
+      font-family: 'DM Mono', monospace;
+      color: var(--green);
+    }
+
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.3
+      }
+    }
+
+    /* ── Tabs ── */
+    nav.tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      padding: 0 2rem;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      padding: 0.9rem 1.4rem;
+      border: none;
+      background: none;
+      color: var(--text-dim);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      white-space: nowrap;
+      letter-spacing: 0.03em;
+    }
+
+    .tab-btn:hover {
+      color: var(--text);
+    }
+
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    /* ── Layout ── */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1.5rem 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    .card-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 1rem;
+    }
+
+    /* ── Grid Layouts ── */
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
+
+    @media(max-width:900px) {
+
+      header,
+      nav.tabs,
+      .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
+
+      .header-meta {
+        display: none;
+      }
+
+      .grid-3,
+      .grid-4 {
+        grid-template-columns: 1fr 1fr
+      }
+
+      .grid-2 {
+        grid-template-columns: 1fr
+      }
+
+      .row {
+        flex-direction: column;
+      }
+    }
+
+    @media(max-width:600px) {
+
+      .grid-3,
+      .grid-4,
+      .grid-2 {
+        grid-template-columns: 1fr
+      }
+    }
+
+    /* ── Stat Cards ── */
+    .stat {
+      text-align: center;
+      padding: 1.2rem;
+    }
+
+    .stat-value {
+      font-family: 'Syne', sans-serif;
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      margin-top: 0.4rem;
+    }
+
+    /* ── Form Controls ── */
+    label {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      display: block;
+      margin-bottom: 0.4rem;
+      font-family: 'DM Mono', monospace;
+    }
+
+    select,
+    input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 0.65rem 0.9rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    select:focus,
+    input:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px var(--green-glow);
+    }
+
+    select option {
+      background: #111;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      border: none;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.02em;
+    }
+
+    .btn-primary {
+      background: var(--green);
+      color: #0a0f0d;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+    }
+
+    .btn-outline:hover {
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .btn-chain {
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #60a5fa;
+    }
+
+    .btn-chain:hover {
+      background: rgba(59, 130, 246, 0.2);
+    }
+
+    /* ── Result Box ── */
+    .result-box {
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-top: 1.2rem;
+      border: 1px solid;
+      display: none;
+    }
+
+    .result-box.sell {
+      background: rgba(34, 197, 94, 0.06);
+      border-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .result-box.hold {
+      background: rgba(245, 158, 11, 0.06);
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    .result-box.neutral {
+      background: rgba(59, 130, 246, 0.06);
+      border-color: rgba(59, 130, 246, 0.3);
+    }
+
+    .result-price {
+      font-family: 'Syne', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 800;
+    }
+
+    .result-rec {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-top: 0.5rem;
+    }
+
+    /* ── Meter / Progress ── */
+    .meter-bar {
+      height: 6px;
+      border-radius: 3px;
+      background: var(--border);
+      margin-top: 0.5rem;
+      overflow: hidden;
+    }
+
+    .meter-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.8s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    /* ── Model Comparison ── */
+    .model-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .model-row:last-child {
+      border-bottom: none;
+    }
+
+    .model-name {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+    }
+
+    .model-badge {
+      font-size: 0.65rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .badge-best {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--green);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .badge-good {
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--amber);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .badge-ok {
+      background: rgba(100, 100, 100, 0.1);
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+
+    /* ── Chart (Canvas-based) ── */
+    canvas {
+      max-width: 100%;
+    }
+
+    /* ──────────────────────────────────────── */
+    /* BLOCKCHAIN SECTION */
+    /* ──────────────────────────────────────── */
+    .chain-wrap {
+      position: relative;
+    }
+
+    .block-card {
+      background: linear-gradient(135deg, #0d1f2d 0%, #0a1520 100%);
+      border: 1px solid var(--chain-border);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .block-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(37, 99, 235, 0.15);
+    }
+
+    .block-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--chain-border), #60a5fa, var(--chain-border));
+      opacity: 0.7;
+    }
+
+    .block-number {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      color: #60a5fa;
+      margin-bottom: 0.5rem;
+    }
+
+    .block-hash {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      color: #4b7bb5;
+      word-break: break-all;
+      line-height: 1.4;
+      margin-bottom: 0.6rem;
+    }
+
+    .block-data {
+      font-size: 0.75rem;
+      color: var(--text);
+    }
+
+    .block-data span {
+      color: #60a5fa;
+    }
+
+    .block-ts {
+      font-size: 0.62rem;
+      color: var(--text-muted);
+      font-family: 'DM Mono', monospace;
+      margin-top: 0.4rem;
+    }
+
+    .chain-connector {
+      text-align: center;
+      padding: 0.3rem 0;
+      color: #2563eb;
+      font-size: 1rem;
+      opacity: 0.6;
+    }
+
+    .chain-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+    }
+
+    .chain-ok {
+      color: var(--green);
+    }
+
+    .chain-pending {
+      color: var(--amber);
+    }
+
+    /* ── Toasts ── */
+    #toast-container {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .toast {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.8rem 1.2rem;
+      font-size: 0.8rem;
+      max-width: 300px;
+      animation: toastIn 0.3s ease;
+      border-left: 3px solid var(--green);
+    }
+
+    .toast.chain {
+      border-left-color: #3b82f6;
+    }
+
+    .toast.warn {
+      border-left-color: var(--amber);
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateX(20px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0)
+      }
+    }
+
+    /* ── Price Chart ── */
+    .chart-container {
+      position: relative;
+      padding: 1rem;
+      background: var(--bg);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .chart-svg {
+      width: 100%;
+      height: 180px;
+    }
+
+    /* ── Forecast Table ── */
+    .forecast-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+
+    .forecast-table th {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      text-align: left;
+      padding: 0.5rem 0.8rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .forecast-table td {
+      padding: 0.6rem 0.8rem;
+      border-bottom: 1px solid rgba(30, 46, 34, 0.5);
+    }
+
+    .forecast-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .forecast-table tr:hover td {
+      background: rgba(34, 197, 94, 0.03);
+    }
+
+    .price-up {
+      color: var(--green);
+    }
+
+    .price-down {
+      color: var(--red);
+    }
+
+    /* ── Wallet ── */
+    .wallet-box {
+      background: linear-gradient(135deg, #0d1f2d, #0a1520);
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .wallet-addr {
+      font-size: 0.72rem;
+      color: #60a5fa;
+      word-break: break-all;
+    }
+
+    .wallet-balance {
+      font-size: 1.6rem;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      color: var(--accent);
+      margin-top: 0.4rem;
+    }
+
+    /* ── Loading Spinner ── */
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(34, 197, 94, 0.3);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* ── Section Headers ── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--text);
+    }
+
+    .section-sub {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 1.5rem 0;
+    }
+
+    /* ── Tag pills ── */
+    .tag {
+      display: inline-block;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.62rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      background: rgba(34, 197, 94, 0.08);
+      color: var(--green);
+      border: 1px solid rgba(34, 197, 94, 0.2);
+      margin: 0.15rem;
+    }
+
+    .mb-1 {
+      margin-bottom: 0.5rem;
+    }
+
+    .mb-2 {
+      margin-bottom: 1rem;
+    }
+
+    .mb-3 {
+      margin-bottom: 1.5rem;
+    }
+
+    .mt-1 {
+      margin-top: 0.5rem;
+    }
+
+    .mt-2 {
+      margin-top: 1rem;
+    }
+
+    .row {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .col {
+      flex: 1;
+    }
+
+    /* ── New block animation ── */
+    @keyframes blockMine {
+      0% {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+      }
+
+      60% {
+        opacity: 1;
+        transform: scale(1.02) translateY(-2px);
+      }
+
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    .block-new {
+      animation: blockMine 0.5s ease forwards;
+    }
+
+    /* ── Verify tick ── */
+    .tick {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      line-height: 16px;
+      text-align: center;
+      border-radius: 50%;
+      background: var(--green);
+      color: #000;
+      font-size: 10px;
+      font-weight: 900;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <div class="logo">
+      <span class="logo-icon">🌾</span>
+      AgriChain
+    </div>
+    <div style="display:flex;align-items:center;gap:1rem">
+      <div class="live-badge">
+        <div class="live-dot"></div> LIVE
+      </div>
+      <div class="header-meta">
+        CSE23602 · Global Academy of Technology<br>
+        Bengaluru · Gradient Boosting R²=0.9986
+      </div>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard', this)">📊 Dashboard</button>
+    <button class="tab-btn" data-tab="predict" onclick="switchTab('predict', this)">🔮 Price Prediction</button>
+    <button class="tab-btn" data-tab="blockchain" onclick="switchTab('blockchain', this)">⛓️ Blockchain Ledger</button>
+    <button class="tab-btn" data-tab="models" onclick="switchTab('models', this)">🤖 ML Models</button>
+    <button class="tab-btn" data-tab="forecast" onclick="switchTab('forecast', this)">📈 12-Month Forecast</button>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- PAGE: DASHBOARD -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div id="page-dashboard" class="page active">
+    <div class="container">
+
+      <!-- Stats Row -->
+      <div class="grid-4 mb-3">
+        <div class="card stat">
+          <div class="stat-value">1.5M+</div>
+          <div class="stat-label">Mandi Records Processed</div>
+        </div>
+        <div class="card stat">
+          <div class="stat-value">98.22%</div>
+          <div class="stat-label">Model Accuracy (Gradient Boosting)</div>
+        </div>
+        <div class="card stat">
+          <div class="stat-value" id="mae-value">₹31.56</div>
+          <div class="stat-label" id="mae-unit-label">Mean Absolute Error / Quintal</div>
+        </div>
+        <div class="card stat">
+          <div class="stat-value" id="chain-blocks">0</div>
+          <div class="stat-label">Blockchain Transactions</div>
+        </div>
+      </div>
+
+      <div class="grid-2 mb-3">
+        <!-- Live Price Chart -->
+        <div class="card">
+          <div class="card-title" id="live-chart-title">Live Price Trend</div>
+          <div class="chart-container">
+            <svg class="chart-svg" id="price-svg" viewBox="0 0 600 180" preserveAspectRatio="none"></svg>
+          </div>
+          <div style="font-size:0.72rem;color:var(--text-dim);margin-top:0.5rem;font-family:'DM Mono',monospace"
+            id="live-price-label">Last 30 days · ₹/Quintal</div>
+        </div>
+
+        <!-- Commodity Ticker -->
+        <div class="card">
+          <div class="card-title">Commodity Price Ticker</div>
+          <div id="ticker-list" style="display:flex;flex-direction:column;gap:0.5rem"></div>
+        </div>
+      </div>
+
+      <!-- Features used -->
+      <div class="card mb-3">
+        <div class="card-title">Features Engineered (19 total)</div>
+        <div>
+          <span class="tag">Month</span><span class="tag">Year</span><span class="tag">DayOfWeek</span>
+          <span class="tag">Quarter</span><span class="tag">IsWeekend</span>
+          <span class="tag">Commodity_enc</span><span class="tag">State_enc</span>
+          <span class="tag">Market_enc</span><span class="tag">Variety_enc</span>
+          <span class="tag">Grade_enc</span><span class="tag">Price_Spread</span>
+          <span class="tag">Avg_Price</span><span class="tag">Price_Range</span>
+          <span class="tag">Min_Price_lag1</span><span class="tag">Max_Price_lag1</span>
+          <span class="tag">Modal_Price_lag1</span><span class="tag">Min_Price_lag7</span>
+          <span class="tag">Max_Price_lag7</span><span class="tag">Modal_Price_lag7</span>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">Dataset Info</div>
+          <div class="model-row"><span class="model-name">Total records</span><span
+              style="font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--accent)">1,548,523</span></div>
+          <div class="model-row"><span class="model-name">Cleaned records</span><span
+              style="font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--accent)">400,419</span></div>
+          <div class="model-row"><span class="model-name">Training samples</span><span
+              style="font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--text)">299,405</span></div>
+          <div class="model-row"><span class="model-name">Testing samples</span><span
+              style="font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--text)">74,852</span></div>
+          <div class="model-row"><span class="model-name">Time span</span><span
+              style="font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--text)">2023–2025</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Best Model — Gradient Boosting</div>
+          <div class="model-row"><span class="model-name">R² Score</span><span
+              style="font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--accent)">0.9986</span></div>
+          <div class="model-row"><span class="model-name">MAE</span><span
+              style="font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--green)">₹31.56</span></div>
+          <div class="model-row"><span class="model-name">RMSE</span><span
+              style="font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--text)">₹60.38</span></div>
+          <div class="model-row"><span class="model-name">MAPE</span><span
+              style="font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--text)">1.78%</span></div>
+          <div class="model-row"><span class="model-name">Accuracy</span><span
+              style="font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--accent)">98.22%</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Team — CSE23602</div>
+          <div class="model-row"><span class="model-name">1GA23CS040</span><span
+              style="font-size:0.8rem;color:var(--text)">Dhyan Kumar M</span></div>
+          <div class="model-row"><span class="model-name">1GA23CS004</span><span
+              style="font-size:0.8rem;color:var(--text)">Abhishek M H</span></div>
+          <div class="model-row"><span class="model-name">1GA23CS042</span><span
+              style="font-size:0.8rem;color:var(--text)">Divya Chatter</span></div>
+          <div class="model-row"><span class="model-name">Faculty</span><span
+              style="font-size:0.8rem;color:var(--text)">Reshma D'Souza</span></div>
+          <div class="model-row"><span class="model-name">College</span><span
+              style="font-size:0.75rem;color:var(--text-dim)">Global Academy of Tech</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- PAGE: PREDICTION -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div id="page-predict" class="page">
+    <div class="container">
+      <div class="grid-2">
+        <div>
+          <div class="card mb-2">
+            <div class="section-header">
+              <div>
+                <div class="section-title">Price Prediction Engine</div>
+                <div class="section-sub">Powered by Gradient Boosting (R²=0.9986)</div>
+              </div>
+            </div>
+            <div class="row mb-2">
+              <div class="col">
+                <label>Commodity</label>
+                <select id="p-commodity">
+                  <option>Tomato</option>
+                  <option>Onion</option>
+                  <option>Potato</option>
+                  <option>Wheat</option>
+                  <option>Rice</option>
+                  <option>Maize</option>
+                  <option>Soybean</option>
+                  <option>Garlic</option>
+                  <option>Ginger</option>
+                  <option>Cauliflower</option>
+                  <option>Brinjal</option>
+                  <option>Cabbage</option>
+                </select>
+              </div>
+              <div class="col">
+                <label>State</label>
+                <select id="p-state">
+                  <option>Karnataka</option>
+                  <option>Maharashtra</option>
+                  <option>Punjab</option>
+                  <option>Uttar Pradesh</option>
+                  <option>Madhya Pradesh</option>
+                  <option>Tamil Nadu</option>
+                  <option>West Bengal</option>
+                  <option>Andhra Pradesh</option>
+                  <option>Gujarat</option>
+                  <option>Rajasthan</option>
+                </select>
+              </div>
+            </div>
+            <div class="row mb-2">
+              <div class="col">
+                <label>Month</label>
+                <select id="p-month">
+                  <option value="1">January</option>
+                  <option value="2">February</option>
+                  <option value="3">March</option>
+                  <option value="4">April</option>
+                  <option value="5">May</option>
+                  <option value="6">June</option>
+                  <option value="7">July</option>
+                  <option value="8">August</option>
+                  <option value="9">September</option>
+                  <option value="10">October</option>
+                  <option value="11">November</option>
+                  <option value="12">December</option>
+                </select>
+              </div>
+              <div class="col">
+                <label>Year</label>
+                <select id="p-year">
+                  <option>2025</option>
+                  <option>2026</option>
+                  <option>2027</option>
+                </select>
+              </div>
+            </div>
+            <div class="row mb-2">
+              <div class="col">
+                <label>Grade</label>
+                <select id="p-grade">
+                  <option>FAQ</option>
+                  <option>A</option>
+                  <option>B</option>
+                  <option>Premium</option>
+                </select>
+              </div>
+              <div class="col">
+                <label id="p-lagprice-label">Previous Modal Price (Optional, ₹/Q)</label>
+                <input type="number" id="p-lagprice" placeholder="Auto from historical data" min="100" max="50000">
+              </div>
+              <div class="col">
+                <label>Price Unit</label>
+                <select id="price-unit">
+                  <option value="quintal" selected>Per Quintal (₹/Q)</option>
+                  <option value="kg">Per Kg (₹/Kg)</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+              <button class="btn btn-primary" onclick="runPrediction()">
+                <span id="pred-spinner" style="display:none" class="spinner"></span>
+                🔮 Predict Price
+              </button>
+              <button class="btn btn-chain" onclick="recordOnChain()">⛓️ Record on Blockchain</button>
+            </div>
+
+            <!-- Result -->
+            <div class="result-box" id="pred-result">
+              <div style="display:flex;align-items:flex-end;gap:1rem;flex-wrap:wrap">
+                <div class="result-price" id="pred-price"></div>
+                <div>
+                  <div style="font-size:0.72rem;color:var(--text-dim);font-family:'DM Mono',monospace" id="pred-unit-label">₹ per Quintal ·
+                    Predicted</div>
+                  <div style="font-size:0.72rem;color:var(--text-dim);margin-top:0.2rem" id="pred-range"></div>
+                </div>
+              </div>
+              <div class="result-rec" id="pred-rec"></div>
+              <div style="margin-top:1rem">
+                <div
+                  style="font-size:0.72rem;color:var(--text-dim);margin-bottom:0.4rem;font-family:'DM Mono',monospace">
+                  CONFIDENCE vs BASELINE</div>
+                <div class="meter-bar">
+                  <div class="meter-fill" id="pred-meter" style="width:0%;background:var(--green)"></div>
+                </div>
+                <div style="font-size:0.68rem;color:var(--text-dim);margin-top:0.3rem;font-family:'DM Mono',monospace"
+                  id="pred-conf"></div>
+              </div>
+              <div style="margin-top:1rem;font-size:0.72rem;color:var(--text-muted);font-family:'DM Mono',monospace"
+                id="pred-hash"></div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <!-- Recent Predictions -->
+          <div class="card mb-2">
+            <div class="card-title">Recent Predictions</div>
+            <div id="recent-preds" style="display:flex;flex-direction:column;gap:0.5rem">
+              <div
+                style="font-size:0.78rem;color:var(--text-muted);font-family:'DM Mono',monospace;text-align:center;padding:1rem">
+                No predictions yet. Run one above!</div>
+            </div>
+          </div>
+          <!-- Farmer Advisory -->
+          <div class="card">
+            <div class="card-title">🧑‍🌾 Farmer Advisory Guide</div>
+            <div style="font-size:0.78rem;color:var(--text-dim);line-height:1.7">
+              <div style="margin-bottom:0.6rem">
+                <span style="color:var(--green);font-weight:600">✅ SELL Signal</span> — Predicted price ≥5% above
+                baseline average. Optimal selling window.
+              </div>
+              <div style="margin-bottom:0.6rem">
+                <span style="color:var(--amber);font-weight:600">⏳ HOLD Signal</span> — Predicted price ≤5% below
+                baseline. Wait for market improvement.
+              </div>
+              <div>
+                <span style="color:#60a5fa;font-weight:600">⚖️ NEUTRAL Signal</span> — Price near historical average.
+                Monitor closely and decide based on storage capacity.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- PAGE: BLOCKCHAIN -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div id="page-blockchain" class="page">
+    <div class="container">
+
+      <div class="grid-2 mb-3">
+        <!-- Wallet -->
+        <div class="wallet-box">
+          <div style="font-size:0.65rem;color:#4b7bb5;font-family:'DM Mono',monospace;margin-bottom:0.4rem">🔐 FARMER
+            WALLET</div>
+          <div class="wallet-addr" id="wallet-addr">0x0000...generating</div>
+          <div class="wallet-balance" id="wallet-balance">0 AGT</div>
+          <div style="font-size:0.65rem;color:#4b7bb5;font-family:'DM Mono',monospace;margin-top:0.4rem">AgriToken ·
+            Proof-of-Stake</div>
+        </div>
+
+        <!-- Chain Stats -->
+        <div class="card">
+          <div class="card-title">Chain Statistics</div>
+          <div class="model-row"><span class="model-name">Chain ID</span><span
+              style="font-family:'DM Mono',monospace;font-size:0.75rem;color:#60a5fa">AgriChain-v1 #4001</span></div>
+          <div class="model-row"><span class="model-name">Total Blocks</span><span
+              style="font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--accent)"
+              id="chain-total-blocks">1</span></div>
+          <div class="model-row"><span class="model-name">Consensus</span><span
+              style="font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--text)">Proof-of-Authority</span>
+          </div>
+          <div class="model-row"><span class="model-name">Status</span><span class="chain-status chain-ok">●
+              ACTIVE</span></div>
+          <div class="model-row"><span class="model-name">Integrity</span><span class="chain-status chain-ok"
+              id="chain-integrity">● VALID</span></div>
+        </div>
+      </div>
+
+      <!-- Add Manual Transaction -->
+      <div class="card mb-3">
+        <div class="card-title">📝 Record Price Transaction</div>
+        <div class="row mb-2">
+          <div class="col">
+            <label>Commodity</label>
+            <select id="bc-commodity">
+              <option>Tomato</option>
+              <option>Onion</option>
+              <option>Potato</option>
+              <option>Wheat</option>
+              <option>Rice</option>
+              <option>Maize</option>
+              <option>Garlic</option>
+            </select>
+          </div>
+          <div class="col">
+            <label>Market</label>
+            <input id="bc-market" placeholder="e.g. Lasalgaon, Bengaluru APMC" value="Bengaluru APMC">
+          </div>
+          <div class="col">
+            <label id="bc-price-label">Modal Price (₹/Q)</label>
+            <input type="number" id="bc-price" placeholder="e.g. 2500" value="2500" min="0">
+          </div>
+          <div class="col">
+            <label id="bc-qty-label">Quantity (Quintals)</label>
+            <input type="number" id="bc-qty" placeholder="e.g. 10" value="10" min="1">
+          </div>
+        </div>
+        <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap">
+          <button class="btn btn-chain" onclick="mineBlock()">
+            <span id="mine-spinner" style="display:none" class="spinner"></span>
+            ⛏️ Mine Block
+          </button>
+          <button class="btn btn-outline" onclick="verifyChain()">🔍 Verify Chain</button>
+          <button class="btn btn-outline" onclick="exportChain()">📥 Export Ledger</button>
+        </div>
+      </div>
+
+      <!-- Blockchain visualization -->
+      <div class="section-header mb-2">
+        <div>
+          <div class="section-title">⛓️ Distributed Ledger</div>
+          <div class="section-sub">Immutable price records — each block hashed with SHA-256 simulation</div>
+        </div>
+        <div style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--text-dim)" id="chain-verify-status">
+        </div>
+      </div>
+
+      <div class="chain-wrap" id="chain-container">
+        <!-- Blocks inserted by JS -->
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- PAGE: ML MODELS -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div id="page-models" class="page">
+    <div class="container">
+      <div class="grid-2 mb-3">
+        <div class="card">
+          <div class="card-title">Model Performance Comparison</div>
+          <div id="models-list"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Model Accuracy Bar Chart</div>
+          <div style="display:flex;flex-direction:column;gap:0.7rem;padding-top:0.5rem" id="model-bars"></div>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">Cross-Validation (5-Fold)</div>
+          <div style="font-size:0.78rem;color:var(--text-dim);line-height:1.8;font-family:'DM Mono',monospace">
+            <div>GB → R² <span style="color:var(--accent)">0.9985 ± 0.0003</span></div>
+            <div>RF → R² <span style="color:var(--green)">0.9971 ± 0.0004</span></div>
+            <div>XGB → R² <span style="color:var(--green)">0.9968 ± 0.0005</span></div>
+            <div>DT → R² <span style="color:var(--amber)">0.9891 ± 0.0012</span></div>
+            <div>RDG → R² <span style="color:var(--amber)">0.8234 ± 0.0089</span></div>
+            <div>LR → R² <span style="color:var(--red)">0.8201 ± 0.0091</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Top Features (Random Forest)</div>
+          <div style="display:flex;flex-direction:column;gap:0.5rem;font-family:'DM Mono',monospace;font-size:0.72rem">
+            <div>Modal_Price_lag1 <span style="float:right;color:var(--accent)">32.4%</span>
+              <div class="meter-bar mt-1">
+                <div class="meter-fill" style="width:100%;background:var(--accent)"></div>
+              </div>
+            </div>
+            <div>Modal_Price_lag7 <span style="float:right;color:var(--green)">22.1%</span>
+              <div class="meter-bar mt-1">
+                <div class="meter-fill" style="width:68%;background:var(--green)"></div>
+              </div>
+            </div>
+            <div>Price_Spread <span style="float:right;color:var(--green)">11.3%</span>
+              <div class="meter-bar mt-1">
+                <div class="meter-fill" style="width:35%;background:var(--green)"></div>
+              </div>
+            </div>
+            <div>Commodity_enc <span style="float:right;color:var(--text-dim)">9.8%</span>
+              <div class="meter-bar mt-1">
+                <div class="meter-fill" style="width:30%;background:var(--text-muted)"></div>
+              </div>
+            </div>
+            <div>Month <span style="float:right;color:var(--text-dim)">8.2%</span>
+              <div class="meter-bar mt-1">
+                <div class="meter-fill" style="width:25%;background:var(--text-muted)"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Data Pipeline Steps</div>
+          <div style="font-size:0.78rem;color:var(--text-dim);line-height:2">
+            <div>1. <span style="color:var(--text)">Kaggle data ingestion</span></div>
+            <div>2. <span style="color:var(--text)">Deduplication + null handling</span></div>
+            <div>3. <span style="color:var(--text)">IQR outlier removal</span></div>
+            <div>4. <span style="color:var(--text)">Label encoding (categoricals)</span></div>
+            <div>5. <span style="color:var(--text)">Feature engineering (19 cols)</span></div>
+            <div>6. <span style="color:var(--text)">StandardScaler normalization</span></div>
+            <div>7. <span style="color:var(--text)">80/20 train-test split</span></div>
+            <div>8. <span style="color:var(--text)">Model training & evaluation</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- PAGE: FORECAST -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div id="page-forecast" class="page">
+    <div class="container">
+      <div class="card mb-3">
+        <div class="section-header">
+          <div>
+            <div class="section-title">12-Month Price Forecast</div>
+            <div class="section-sub">Gradient Boosting predictions with seasonal patterns</div>
+          </div>
+          <div style="display:flex;gap:0.5rem">
+            <select id="forecast-commodity" onchange="renderForecast()" style="width:auto">
+              <option>Tomato</option>
+              <option>Onion</option>
+              <option>Potato</option>
+              <option>Wheat</option>
+              <option>Rice</option>
+              <option>Maize</option>
+            </select>
+            <select id="forecast-state" onchange="renderForecast()" style="width:auto">
+              <option>Karnataka</option>
+              <option>Maharashtra</option>
+              <option>Punjab</option>
+              <option>Tamil Nadu</option>
+              <option>West Bengal</option>
+            </select>
+          </div>
+        </div>
+        <!-- SVG Line Chart -->
+        <div class="chart-container mb-2">
+          <svg id="forecast-svg" style="width:100%;height:240px" viewBox="0 0 800 240" preserveAspectRatio="none"></svg>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Monthly Breakdown</div>
+        <table class="forecast-table">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th id="forecast-min-head">Predicted Min (₹/Q)</th>
+              <th id="forecast-modal-head">Predicted Modal (₹/Q)</th>
+              <th id="forecast-max-head">Predicted Max (₹/Q)</th>
+              <th>Change</th>
+              <th>Advice</th>
+            </tr>
+          </thead>
+          <tbody id="forecast-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toast-container"></div>
+
+  <script>
+    // ═══════════════════════════════════════════════════════════════════
+    // CORE DATA & HELPERS
+    // ═══════════════════════════════════════════════════════════════════
+    const MODEL_META = { loaded: false, commodities: [], states: [], grades: [], model_name: 'Unknown', feature_count: 0 };
+    const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const MAE_PER_QUINTAL = 31.56;
+    let ACTIVE_PRICE_UNIT = 'quintal';
+
+    function getPriceUnit() {
+      return document.getElementById('price-unit')?.value === 'kg' ? 'kg' : 'quintal';
+    }
+
+    function getUnitShort(unit = getPriceUnit()) {
+      return unit === 'kg' ? 'Kg' : 'Q';
+    }
+
+    function convertPriceFromQuintal(price, unit = getPriceUnit()) {
+      const n = Number(price) || 0;
+      return unit === 'kg' ? n / 100 : n;
+    }
+
+    function convertPriceToQuintal(price, unit = getPriceUnit()) {
+      const n = Number(price) || 0;
+      return unit === 'kg' ? n * 100 : n;
+    }
+
+    function convertQtyFromQuintal(qtyQ, unit = getPriceUnit()) {
+      const n = Number(qtyQ) || 0;
+      return unit === 'kg' ? n * 100 : n;
+    }
+
+    function convertQtyToQuintal(qty, unit = getPriceUnit()) {
+      const n = Number(qty) || 0;
+      return unit === 'kg' ? n / 100 : n;
+    }
+
+    function formatPriceFromQuintal(priceQ, unit = getPriceUnit()) {
+      const val = convertPriceFromQuintal(priceQ, unit);
+      return `₹${val.toLocaleString('en-IN', {
+        minimumFractionDigits: unit === 'kg' ? 2 : 0,
+        maximumFractionDigits: unit === 'kg' ? 2 : 0,
+      })}`;
+    }
+
+    function updateUnitCopy() {
+      const unit = getPriceUnit();
+      const unitShort = getUnitShort(unit);
+      const isKg = unit === 'kg';
+      const lagInput = document.getElementById('p-lagprice');
+      const bcPrice = document.getElementById('bc-price');
+      const bcQty = document.getElementById('bc-qty');
+      if (document.getElementById('p-lagprice-label')) {
+        document.getElementById('p-lagprice-label').textContent = `Previous Modal Price (Optional, ₹/${unitShort})`;
+      }
+      if (document.getElementById('pred-unit-label')) {
+        document.getElementById('pred-unit-label').textContent = isKg ? '₹ per Kg · Predicted' : '₹ per Quintal · Predicted';
+      }
+      if (document.getElementById('bc-price-label')) {
+        document.getElementById('bc-price-label').textContent = `Modal Price (₹/${unitShort})`;
+      }
+      if (document.getElementById('bc-qty-label')) {
+        document.getElementById('bc-qty-label').textContent = `Quantity (${isKg ? 'Kg' : 'Quintals'})`;
+      }
+      if (document.getElementById('forecast-min-head')) {
+        document.getElementById('forecast-min-head').textContent = `Predicted Min (₹/${unitShort})`;
+      }
+      if (document.getElementById('forecast-modal-head')) {
+        document.getElementById('forecast-modal-head').textContent = `Predicted Modal (₹/${unitShort})`;
+      }
+      if (document.getElementById('forecast-max-head')) {
+        document.getElementById('forecast-max-head').textContent = `Predicted Max (₹/${unitShort})`;
+      }
+      const maeVal = convertPriceFromQuintal(MAE_PER_QUINTAL, unit);
+      const maeEl = document.getElementById('mae-value');
+      const maeLabel = document.getElementById('mae-unit-label');
+      if (maeEl) maeEl.textContent = `₹${maeVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      if (maeLabel) maeLabel.textContent = `Mean Absolute Error / ${isKg ? 'Kg' : 'Quintal'}`;
+      if (lagInput) {
+        lagInput.min = isKg ? '1' : '100';
+        lagInput.max = isKg ? '500' : '50000';
+      }
+      if (bcPrice) bcPrice.placeholder = isKg ? 'e.g. 25' : 'e.g. 2500';
+      if (bcQty) bcQty.placeholder = isKg ? 'e.g. 1000' : 'e.g. 10';
+    }
+
+    async function apiGet(url) {
+      const res = await fetch(url, { headers: { Accept: 'application/json' } });
+      if (!res.ok) throw new Error(`API GET failed: ${res.status}`);
+      return res.json();
+    }
+
+    async function apiPost(url, payload) {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        let msg = `API POST failed: ${res.status}`;
+        try {
+          const body = await res.json();
+          if (body?.error) msg = body.error;
+        } catch (e) { }
+        throw new Error(msg);
+      }
+      return res.json();
+    }
+
+    function setSelectOptions(el, values, preferred) {
+      if (!el || !Array.isArray(values) || !values.length) return;
+      const prior = preferred || el.value;
+      el.innerHTML = values.map(v => `<option>${v}</option>`).join('');
+      if (values.includes(prior)) el.value = prior;
+    }
+
+    async function loadModelMetadata() {
+      const meta = await apiGet('/api/metadata');
+      MODEL_META.loaded = true;
+      MODEL_META.commodities = meta.commodities || [];
+      MODEL_META.states = meta.states || [];
+      MODEL_META.grades = meta.grades || ['FAQ'];
+      MODEL_META.model_name = meta.model_name || 'Unknown';
+      MODEL_META.feature_count = meta.feature_count || 0;
+
+      setSelectOptions(document.getElementById('p-commodity'), MODEL_META.commodities);
+      setSelectOptions(document.getElementById('p-state'), MODEL_META.states);
+      setSelectOptions(document.getElementById('p-grade'), MODEL_META.grades, 'FAQ');
+      setSelectOptions(document.getElementById('forecast-commodity'), MODEL_META.commodities, document.getElementById('p-commodity')?.value);
+      setSelectOptions(document.getElementById('forecast-state'), MODEL_META.states, document.getElementById('p-state')?.value);
+    }
+
+    function hash256(str) {
+      let h = 0x811c9dc5;
+      for (let i = 0; i < str.length; i++) {
+        h ^= str.charCodeAt(i);
+        h = (h * 0x01000193) >>> 0;
+      }
+      return Array.from({ length: 32 }, (_, i) => {
+        let part = (h * (i + 1) * 2654435761) >>> 0;
+        return (part >>> 0).toString(16).padStart(8, '0');
+      }).join('').substring(0, 64);
+    }
+
+    function toast(msg, type = '') {
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.textContent = msg;
+      document.getElementById('toast-container').appendChild(el);
+      setTimeout(() => el.style.opacity = '0', 2800);
+      setTimeout(() => el.remove(), 3200);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // TABS
+    // ═══════════════════════════════════════════════════════════════════
+    function switchTab(id, btn) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('page-' + id).classList.add('active');
+      const activeBtn = btn || document.querySelector(`.tab-btn[data-tab="${id}"]`);
+      if (activeBtn) activeBtn.classList.add('active');
+      if (id === 'forecast') {
+        const pCommodity = document.getElementById('p-commodity')?.value;
+        const pState = document.getElementById('p-state')?.value;
+        if (pCommodity && document.getElementById('forecast-commodity')) {
+          document.getElementById('forecast-commodity').value = pCommodity;
+        }
+        if (pState && document.getElementById('forecast-state')) {
+          document.getElementById('forecast-state').value = pState;
+        }
+        renderForecast();
+      }
+      if (id === 'blockchain') renderChain();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // DASHBOARD — Live Chart
+    // ═══════════════════════════════════════════════════════════════════
+    async function initLiveChart() {
+      try {
+        const commodity = document.getElementById('p-commodity')?.value || 'Tomato';
+        const state = document.getElementById('p-state')?.value || 'Karnataka';
+        const titleEl = document.getElementById('live-chart-title');
+        if (titleEl) titleEl.textContent = `Live Price Trend — ${commodity} · ${state}`;
+        const q = `?commodity=${encodeURIComponent(commodity)}&state=${encodeURIComponent(state)}`;
+        const data = await apiGet('/api/live-series' + q);
+        const unit = getPriceUnit();
+        const prices = (data.prices || []).map(v => convertPriceFromQuintal(Number(v) || 0, unit)).filter(v => v > 0);
+        if (!prices.length) return;
+        drawSparkLine('price-svg', prices, '#22c55e');
+        const currentPrice = prices[prices.length - 1];
+        document.getElementById('live-price-label').textContent =
+          `Last ${prices.length} observations · Current: ₹${currentPrice.toLocaleString('en-IN', { minimumFractionDigits: unit === 'kg' ? 2 : 0, maximumFractionDigits: unit === 'kg' ? 2 : 0 })}/${getUnitShort(unit)}`;
+      } catch (err) {
+        document.getElementById('live-price-label').textContent = 'Live series unavailable';
+      }
+    }
+
+    function drawSparkLine(id, data, color) {
+      const svg = document.getElementById(id);
+      if (!svg) return;
+      const W = 600, H = 180, pad = 20;
+      const mn = Math.min(...data), mx = Math.max(...data);
+      const xs = i => pad + (i / (data.length - 1)) * (W - pad * 2);
+      const ys = v => H - pad - ((v - mn) / (mx - mn)) * (H - pad * 2);
+
+      let pts = data.map((v, i) => `${xs(i)},${ys(v)}`).join(' ');
+      let fillPts = `${pad},${H - pad} ` + pts + ` ${W - pad},${H - pad}`;
+
+      svg.innerHTML = `
+    <defs>
+      <linearGradient id="spk" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${color}" stop-opacity="0.3"/>
+        <stop offset="100%" stop-color="${color}" stop-opacity="0.02"/>
+      </linearGradient>
+    </defs>
+    <polygon points="${fillPts}" fill="url(#spk)"/>
+    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
+    <circle cx="${xs(data.length - 1)}" cy="${ys(data[data.length - 1])}" r="4" fill="${color}"/>
+  `;
+    }
+
+    // Ticker
+    async function initTicker() {
+      const el = document.getElementById('ticker-list');
+      try {
+        const data = await apiGet('/api/ticker');
+        const items = (data.items || []).slice(0, 8).map(item => {
+          const unit = getPriceUnit();
+          const priceQ = Number(item.price) || 0;
+          const change = Number(item.change_pct || 0);
+          const up = change >= 0;
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0.7rem;background:var(--bg);border-radius:6px">
+      <span style="font-size:0.82rem;font-weight:500">${item.name}</span>
+      <span style="font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--text)">${formatPriceFromQuintal(priceQ, unit)}/${getUnitShort(unit)}</span>
+      <span style="font-family:'DM Mono',monospace;font-size:0.72rem;color:${up ? 'var(--green)' : 'var(--red)'}">${up ? '+' : ''}${change.toFixed(2)}%</span>
+    </div>`;
+        });
+        el.innerHTML = items.join('') || '<div style="font-size:0.75rem;color:var(--text-dim)">Ticker unavailable</div>';
+      } catch (err) {
+        el.innerHTML = '<div style="font-size:0.75rem;color:var(--text-dim)">Ticker unavailable</div>';
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // ML PREDICTION ENGINE
+    // ═══════════════════════════════════════════════════════════════════
+    let recentPredictions = [];
+
+    async function runPrediction() {
+      const commodity = document.getElementById('p-commodity').value;
+      const state = document.getElementById('p-state').value;
+      const month = parseInt(document.getElementById('p-month').value);
+      const year = parseInt(document.getElementById('p-year').value);
+      const unit = getPriceUnit();
+      const lagRaw = document.getElementById('p-lagprice').value.trim();
+      const lagPriceInput = Number(lagRaw);
+      const lagPrice = lagRaw && Number.isFinite(lagPriceInput) && lagPriceInput > 0
+        ? (convertPriceToQuintal(lagPriceInput, unit) || 0)
+        : 0;
+      const grade = document.getElementById('p-grade').value;
+
+      const spinner = document.getElementById('pred-spinner');
+      spinner.style.display = 'inline-block';
+      try {
+        const pred = await apiPost('/api/predict', {
+          commodity, state, month, year, lag_price: lagPrice, grade, threshold_pct: 5,
+        });
+        spinner.style.display = 'none';
+        const modalQ = Number(pred.modal || 0);
+        const minQ = Number(pred.min || 0);
+        const maxQ = Number(pred.max || 0);
+        const cls = pred.class || 'neutral';
+        const rec = pred.recommendation || '⚖️ NEUTRAL — Price near historical average.';
+        const conf = Number(pred.confidence || 0);
+        const change = Number(pred.change_pct || 0).toFixed(1);
+        const hashVal = String(pred.hash || hash256(`${commodity}${state}${month}${year}${modalQ}${Date.now()}`));
+
+        const box = document.getElementById('pred-result');
+        box.className = `result-box ${cls}`;
+        box.style.display = 'block';
+        document.getElementById('pred-price').textContent = formatPriceFromQuintal(modalQ, unit);
+        document.getElementById('pred-price').style.color = cls === 'sell' ? 'var(--green)' : cls === 'hold' ? 'var(--amber)' : '#60a5fa';
+        document.getElementById('pred-range').textContent = `Range: ${formatPriceFromQuintal(minQ, unit)} – ${formatPriceFromQuintal(maxQ, unit)}`;
+        document.getElementById('pred-rec').textContent = rec;
+        document.getElementById('pred-rec').style.color = cls === 'sell' ? 'var(--green)' : cls === 'hold' ? 'var(--amber)' : '#60a5fa';
+        document.getElementById('pred-meter').style.width = conf + '%';
+        document.getElementById('pred-conf').textContent = `Model: ${pred.model_name || MODEL_META.model_name} | Confidence: ${conf.toFixed(1)}% | Δ from baseline: ${Number(change) >= 0 ? '+' : ''}${change}%`;
+        document.getElementById('pred-hash').textContent = `TX: 0x${hashVal.substring(0, 40)}...`;
+
+        // Store in recent
+        const entry = { commodity, state, month, year, modalQ, cls, hashVal: hashVal.substring(0, 16), grade };
+        recentPredictions.unshift(entry);
+        if (recentPredictions.length > 6) recentPredictions.pop();
+        renderRecentPreds();
+        toast(`Predicted ${formatPriceFromQuintal(modalQ, unit)} for ${commodity} · ${MONTHS[month - 1]} ${year}`);
+
+        // Store for chain record
+        window._lastPred = { commodity, state, month, year, modalQ, minQ, maxQ, cls, grade, hashVal };
+      } catch (err) {
+        spinner.style.display = 'none';
+        toast(`Prediction failed: ${err.message}`, 'warn');
+      }
+    }
+
+    function renderRecentPreds() {
+      const el = document.getElementById('recent-preds');
+      if (!recentPredictions.length) return;
+      el.innerHTML = recentPredictions.map(p => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:0.6rem 0.8rem;background:var(--bg);border-radius:6px;border:1px solid var(--border)">
+      <div>
+        <div style="font-size:0.82rem;font-weight:500">${p.commodity} · ${p.state}</div>
+        <div style="font-size:0.65rem;color:var(--text-muted);font-family:'DM Mono',monospace">${MONTHS[p.month - 1]} ${p.year} · ${p.grade}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-family:'DM Mono',monospace;font-size:0.85rem;color:${p.cls === 'sell' ? 'var(--green)' : p.cls === 'hold' ? 'var(--amber)' : '#60a5fa'}">${formatPriceFromQuintal(p.modalQ)}</div>
+        <div style="font-size:0.62rem;color:var(--text-muted);font-family:'DM Mono',monospace">0x${p.hashVal}…</div>
+      </div>
+    </div>
+  `).join('');
+    }
+
+    function recordOnChain() {
+      const pred = window._lastPred;
+      if (!pred) { toast('Run a prediction first!', 'warn'); return; }
+      document.getElementById('bc-commodity').value = pred.commodity;
+      document.getElementById('bc-price').value = convertPriceFromQuintal(pred.modalQ);
+        mineBlock(pred.commodity, pred.modalQ, `${MONTHS[pred.month - 1]} ${pred.year} Prediction`, true);
+        toast('Prediction recorded on blockchain! ⛓️', 'chain');
+        switchTab('blockchain');
+      }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // BLOCKCHAIN ENGINE
+    // ═══════════════════════════════════════════════════════════════════
+    let blockchain = [];
+    let walletBalance = 0;
+
+    const GENESIS = {
+      index: 0,
+      timestamp: new Date('2025-01-01T00:00:00').toISOString(),
+      commodity: 'GENESIS',
+      market: 'AgriChain Network',
+      price: 0,
+      qty: 0,
+      prevHash: '0000000000000000000000000000000000000000000000000000000000000000',
+      nonce: 0,
+      data: 'AgriChain Genesis Block — Market Price Prediction System v1.0',
+    };
+    GENESIS.hash = hash256(JSON.stringify(GENESIS));
+    blockchain.push(GENESIS);
+
+    function mineBlock(commodity, price, market, isBasePrice = false) {
+      const spinner = document.getElementById('mine-spinner');
+      if (spinner) spinner.style.display = 'inline-block';
+
+      const unit = getPriceUnit();
+      commodity = commodity || document.getElementById('bc-commodity').value;
+      const inputPrice = Number(price || parseFloat(document.getElementById('bc-price').value) || 2500);
+      const priceQ = isBasePrice ? inputPrice : convertPriceToQuintal(inputPrice, unit);
+      market = market || document.getElementById('bc-market').value || 'Unknown Market';
+      const qtyInput = parseFloat(document.getElementById('bc-qty')?.value) || 10;
+      const qtyQ = convertQtyToQuintal(qtyInput, unit);
+
+      setTimeout(() => {
+        const prev = blockchain[blockchain.length - 1];
+        let nonce = 0;
+        const ts = new Date().toISOString();
+        const blockData = {
+          index: blockchain.length,
+          timestamp: ts,
+          commodity,
+          market,
+          priceQ,
+          qtyQ,
+          prevHash: prev.hash,
+          nonce: 0,
+          data: `Price record: ${commodity} @ ${formatPriceFromQuintal(priceQ, unit)}/${getUnitShort(unit)} × ${convertQtyFromQuintal(qtyQ, unit).toLocaleString('en-IN')} ${unit === 'kg' ? 'Kg' : 'Q'} = ₹${(priceQ * qtyQ).toLocaleString('en-IN')}`,
+        };
+        // Simple PoW: find hash starting with '00'
+        let blockHash;
+        do {
+          blockData.nonce = nonce++;
+          blockHash = hash256(JSON.stringify(blockData) + nonce);
+        } while (!blockHash.startsWith('00') && nonce < 10000);
+        blockData.hash = blockHash;
+        blockchain.push(blockData);
+
+        walletBalance += 1;
+        document.getElementById('wallet-balance').textContent = walletBalance + ' AGT';
+        document.getElementById('chain-blocks').textContent = blockchain.length - 1;
+        document.getElementById('chain-total-blocks').textContent = blockchain.length;
+
+        if (spinner) spinner.style.display = 'none';
+        renderChain();
+        toast(`Block #${blockData.index} mined! Nonce: ${nonce} ⛓️`, 'chain');
+      }, 600 + Math.random() * 400);
+    }
+
+    function renderChain() {
+      const container = document.getElementById('chain-container');
+      container.innerHTML = '';
+      [...blockchain].reverse().forEach((block, i) => {
+        const isGenesis = block.index === 0;
+        const div = document.createElement('div');
+        div.innerHTML = `
+      <div class="block-card ${i === 0 && blockchain.length > 1 ? 'block-new' : ''}">
+        <div class="block-number">BLOCK #${block.index} ${isGenesis ? '— GENESIS' : ''}</div>
+        <div class="block-hash">
+          <span style="color:#4b7bb5">HASH: </span>${block.hash}<br>
+          <span style="color:#4b7bb5">PREV: </span>${block.prevHash.substring(0, 32)}…
+        </div>
+        <div class="block-data">
+          ${isGenesis ? `<span>Network:</span> ${block.data}` :
+            `<span>Commodity:</span> ${block.commodity} &nbsp;|&nbsp; <span>Market:</span> ${block.market}<br>
+           <span>Price:</span> ${formatPriceFromQuintal(block.priceQ ?? block.price)}/${getUnitShort()} &nbsp;|&nbsp; <span>Qty:</span> ${convertQtyFromQuintal(block.qtyQ ?? block.qty).toLocaleString('en-IN')} ${getPriceUnit() === 'kg' ? 'Kg' : 'Q'} &nbsp;|&nbsp; <span>Total:</span> ₹${(((block.priceQ ?? block.price) || 0) * ((block.qtyQ ?? block.qty) || 0)).toLocaleString('en-IN')}<br>
+           <span>Nonce:</span> ${block.nonce}`}
+        </div>
+        <div class="block-ts">⏱ ${new Date(block.timestamp).toLocaleString('en-IN')} &nbsp;·&nbsp; ${block.hash.startsWith('00') ? '✅ Valid PoW' : '⚠ Fast-mined'}</div>
+      </div>
+    `;
+        if (i < blockchain.length - 1) {
+          const conn = document.createElement('div');
+          conn.className = 'chain-connector';
+          conn.textContent = '│ ←prev hash';
+          div.appendChild(conn);
+        }
+        container.appendChild(div);
+      });
+    }
+
+    function verifyChain() {
+      let valid = true;
+      for (let i = 1; i < blockchain.length; i++) {
+        if (blockchain[i].prevHash !== blockchain[i - 1].hash) { valid = false; break; }
+      }
+      const el = document.getElementById('chain-integrity');
+      const status = document.getElementById('chain-verify-status');
+      if (valid) {
+        el.className = 'chain-status chain-ok';
+        el.textContent = '● VALID';
+        status.innerHTML = `<span class="tick">✓</span> Chain verified — ${blockchain.length} blocks, all hashes match`;
+        status.style.color = 'var(--green)';
+        toast('✅ Chain integrity verified! All ' + blockchain.length + ' blocks valid.', 'chain');
+      } else {
+        el.className = 'chain-status';
+        el.style.color = 'var(--red)';
+        el.textContent = '● INVALID';
+        toast('⚠️ Chain tampered! Hash mismatch detected.', 'warn');
+      }
+    }
+
+    function exportChain() {
+      const data = JSON.stringify(blockchain, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'agrichain_ledger.json'; a.click();
+      toast('Ledger exported as JSON ✅');
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // ML MODELS PAGE
+    // ═══════════════════════════════════════════════════════════════════
+    let MODELS_DATA = [
+      { name: '🚀 Trained Model', r2: '-', mae: '-', rmse: '-', mape: '-', acc: 100, badge: 'badge-best', label: 'LOADED' },
+    ];
+
+    function initModels() {
+      MODELS_DATA = [
+        {
+          name: `🚀 ${MODEL_META.model_name}`,
+          r2: 'Artifact',
+          mae: '-',
+          rmse: '-',
+          mape: '-',
+          acc: 100,
+          badge: 'badge-best',
+          label: `FEATURES ${MODEL_META.feature_count || 0}`,
+        },
+      ];
+      const list = document.getElementById('models-list');
+      list.innerHTML = MODELS_DATA.map(m => `
+    <div class="model-row">
+      <div>
+        <div style="font-size:0.82rem;font-weight:500;margin-bottom:0.2rem">${m.name}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--text-dim)">R²=${m.r2} · MAE=₹${m.mae} · MAPE=${m.mape}%</div>
+      </div>
+      <span class="model-badge ${m.badge}">${m.label}</span>
+    </div>
+  `).join('');
+
+      const bars = document.getElementById('model-bars');
+      bars.innerHTML = MODELS_DATA.map(m => `
+    <div>
+      <div style="display:flex;justify-content:space-between;font-size:0.72rem;margin-bottom:0.3rem">
+        <span style="font-family:'DM Mono',monospace;color:var(--text-dim)">${m.name}</span>
+        <span style="font-family:'DM Mono',monospace;color:var(--accent)">${m.acc}%</span>
+      </div>
+      <div class="meter-bar">
+        <div class="meter-fill" style="width:${m.acc}%;background:${m.acc > 97 ? 'var(--green)' : m.acc > 90 ? 'var(--amber)' : 'var(--text-dim)'}"></div>
+      </div>
+    </div>
+  `).join('');
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // FORECAST
+    // ═══════════════════════════════════════════════════════════════════
+    async function renderForecast() {
+      const commodity = document.getElementById('forecast-commodity')?.value || 'Tomato';
+      const state = document.getElementById('forecast-state')?.value || 'Karnataka';
+      const now = new Date();
+      const startMonth = now.getMonth(); // 0-based
+      const grade = document.getElementById('p-grade')?.value || 'FAQ';
+        const unit = getPriceUnit();
+        const lagRaw = (document.getElementById('p-lagprice')?.value || '').trim();
+        const lagPriceInput = Number(lagRaw);
+        const lagPrice = lagRaw && Number.isFinite(lagPriceInput) && lagPriceInput > 0
+          ? (convertPriceToQuintal(lagPriceInput, unit) || 0)
+          : 0;
+        let months = [], modals = [], mins = [], maxs = [], classes = [];
+      try {
+        const out = await apiPost('/api/forecast', {
+          commodity, state, grade, lag_price: lagPrice, start_month: startMonth + 1, start_year: now.getFullYear(),
+        });
+        const rows = out.rows || [];
+        if (!rows.length) {
+          document.getElementById('forecast-tbody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim)">No forecast data available.</td></tr>';
+          return;
+        }
+        months = rows.map(r => r.label);
+        modals = rows.map(r => convertPriceFromQuintal(Number(r.modal) || 0, unit));
+        mins = rows.map(r => convertPriceFromQuintal(Number(r.min) || 0, unit));
+        maxs = rows.map(r => convertPriceFromQuintal(Number(r.max) || 0, unit));
+        classes = rows.map(r => r.class || 'neutral');
+      } catch (err) {
+        toast(`Forecast unavailable: ${err.message}`, 'warn');
+        return;
+      }
+      if (!modals.length) return;
+
+      // Draw SVG line chart
+      const svg = document.getElementById('forecast-svg');
+      const W = 800, H = 240, padX = 60, padY = 30;
+      const allVals = [...modals, ...mins, ...maxs];
+      const minVal = Math.min(...allVals);
+      const maxVal = Math.max(...allVals);
+      const hasRange = maxVal > minVal;
+      const mn = hasRange ? minVal * 0.95 : minVal * 0.95 - 1;
+      const mx = hasRange ? maxVal * 1.05 : maxVal * 1.05 + 1;
+      const pointCount = Math.max(1, modals.length - 1);
+      const xs = i => padX + (i / pointCount) * (W - padX * 2);
+      const ys = v => H - padY - ((v - mn) / (mx - mn)) * (H - padY * 2 - 20);
+
+      const modalPts = modals.map((v, i) => `${xs(i)},${ys(v)}`).join(' ');
+      const minPts = mins.map((v, i) => `${xs(i)},${ys(v)}`).join(' ');
+      const maxPts = maxs.map((v, i) => `${xs(i)},${ys(v)}`).join(' ');
+      const fillPts = maxs.map((v, i) => `${xs(i)},${ys(v)}`).join(' ') + ' ' + [...mins].reverse().map((v, i) => `${xs(pointCount - i)},${ys(v)}`).join(' ');
+
+      const yLabels = Array.from({ length: 5 }, (_, i) => {
+        const v = mn + (mx - mn) * i / 4;
+        return `<text x="${padX - 8}" y="${ys(v) + 4}" text-anchor="end" font-size="9" fill="#3d5244" font-family="monospace">₹${v.toLocaleString('en-IN', { minimumFractionDigits: unit === 'kg' ? 2 : 0, maximumFractionDigits: unit === 'kg' ? 2 : 0 })}</text>`;
+      }).join('');
+      const xLabels = months.map((m, i) => `<text x="${xs(i)}" y="${H - 8}" text-anchor="middle" font-size="8.5" fill="#3d5244" font-family="monospace">${m}</text>`).join('');
+      const dots = modals.map((v, i) => `<circle cx="${xs(i)}" cy="${ys(v)}" r="3" fill="#22c55e"/>`).join('');
+
+      svg.innerHTML = `
+    <defs>
+      <linearGradient id="fg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#22c55e" stop-opacity="0.15"/>
+        <stop offset="100%" stop-color="#22c55e" stop-opacity="0.02"/>
+      </linearGradient>
+    </defs>
+    ${yLabels}${xLabels}
+    <polygon points="${fillPts}" fill="url(#fg)"/>
+    <polyline points="${maxPts}" fill="none" stroke="#22c55e" stroke-width="1" stroke-dasharray="4,3" opacity="0.4"/>
+    <polyline points="${minPts}" fill="none" stroke="#22c55e" stroke-width="1" stroke-dasharray="4,3" opacity="0.4"/>
+    <polyline points="${modalPts}" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linejoin="round"/>
+    ${dots}
+  `;
+
+      // Table
+      const tbody = document.getElementById('forecast-tbody');
+      const base = modals[0];
+      tbody.innerHTML = modals.map((modal, i) => {
+        const chg = ((modal - base) / base * 100).toFixed(1);
+        const up = parseFloat(chg) >= 0;
+        const advice = classes[i] === 'sell' ? '<span style="color:var(--green)">✅ SELL</span>' :
+          classes[i] === 'hold' ? '<span style="color:var(--amber)">⏳ HOLD</span>' :
+            '<span style="color:#60a5fa">⚖️ WATCH</span>';
+        return `<tr>
+      <td style="font-family:'DM Mono',monospace">${months[i]}</td>
+      <td>₹${mins[i].toLocaleString('en-IN', { minimumFractionDigits: unit === 'kg' ? 2 : 0, maximumFractionDigits: unit === 'kg' ? 2 : 0 })}</td>
+      <td style="font-weight:600;color:var(--text)">₹${modal.toLocaleString('en-IN', { minimumFractionDigits: unit === 'kg' ? 2 : 0, maximumFractionDigits: unit === 'kg' ? 2 : 0 })}</td>
+      <td>₹${maxs[i].toLocaleString('en-IN', { minimumFractionDigits: unit === 'kg' ? 2 : 0, maximumFractionDigits: unit === 'kg' ? 2 : 0 })}</td>
+      <td class="${up ? 'price-up' : 'price-down'}">${up ? '+' : ''}${chg}%</td>
+      <td>${advice}</td>
+    </tr>`;
+      }).join('');
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // WALLET INIT
+    // ═══════════════════════════════════════════════════════════════════
+    function initWallet() {
+      const addr = '0x' + hash256('farmer' + Date.now()).substring(0, 40);
+      document.getElementById('wallet-addr').textContent = addr;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // INIT
+    // ═══════════════════════════════════════════════════════════════════
+    window.addEventListener('DOMContentLoaded', async () => {
+      document.getElementById('p-month').value = new Date().getMonth() + 1;
+      try {
+        await loadModelMetadata();
+      } catch (err) {
+        toast('Model API not reachable. Start model_api_server.py', 'warn');
+      }
+      const syncForecastAndDashboard = async () => {
+        const c = document.getElementById('p-commodity')?.value;
+        const s = document.getElementById('p-state')?.value;
+        if (c && document.getElementById('forecast-commodity')) {
+          document.getElementById('forecast-commodity').value = c;
+        }
+        if (s && document.getElementById('forecast-state')) {
+          document.getElementById('forecast-state').value = s;
+        }
+        await initLiveChart();
+        if (document.getElementById('page-forecast').classList.contains('active')) {
+          await renderForecast();
+        }
+      };
+      document.getElementById('p-commodity')?.addEventListener('change', syncForecastAndDashboard);
+      document.getElementById('p-state')?.addEventListener('change', syncForecastAndDashboard);
+      document.getElementById('price-unit')?.addEventListener('change', async () => {
+        const oldUnit = ACTIVE_PRICE_UNIT;
+        const newUnit = getPriceUnit();
+        if (oldUnit !== newUnit) {
+          const lagEl = document.getElementById('p-lagprice');
+          const bcPriceEl = document.getElementById('bc-price');
+          const bcQtyEl = document.getElementById('bc-qty');
+          if (lagEl) {
+            const v = parseFloat(lagEl.value);
+            if (Number.isFinite(v)) {
+              const asQ = convertPriceToQuintal(v, oldUnit);
+              lagEl.value = convertPriceFromQuintal(asQ, newUnit).toFixed(newUnit === 'kg' ? 2 : 0);
+            }
+          }
+          if (bcPriceEl) {
+            const v = parseFloat(bcPriceEl.value);
+            if (Number.isFinite(v)) {
+              const asQ = convertPriceToQuintal(v, oldUnit);
+              bcPriceEl.value = convertPriceFromQuintal(asQ, newUnit).toFixed(newUnit === 'kg' ? 2 : 0);
+            }
+          }
+          if (bcQtyEl) {
+            const v = parseFloat(bcQtyEl.value);
+            if (Number.isFinite(v)) {
+              const asQ = convertQtyToQuintal(v, oldUnit);
+              bcQtyEl.value = convertQtyFromQuintal(asQ, newUnit).toFixed(newUnit === 'kg' ? 0 : 2);
+            }
+          }
+        }
+        ACTIVE_PRICE_UNIT = newUnit;
+        updateUnitCopy();
+        if (window._lastPred) {
+          const cls = window._lastPred.cls || 'neutral';
+          document.getElementById('pred-price').textContent = formatPriceFromQuintal(window._lastPred.modalQ);
+          document.getElementById('pred-range').textContent = `Range: ${formatPriceFromQuintal(window._lastPred.minQ)} – ${formatPriceFromQuintal(window._lastPred.maxQ)}`;
+          document.getElementById('pred-price').style.color = cls === 'sell' ? 'var(--green)' : cls === 'hold' ? 'var(--amber)' : '#60a5fa';
+          document.getElementById('pred-rec').style.color = cls === 'sell' ? 'var(--green)' : cls === 'hold' ? 'var(--amber)' : '#60a5fa';
+          renderRecentPreds();
+        }
+        await initLiveChart();
+        await initTicker();
+        if (document.getElementById('page-forecast').classList.contains('active')) await renderForecast();
+        renderChain();
+      });
+      ACTIVE_PRICE_UNIT = getPriceUnit();
+      updateUnitCopy();
+      await initLiveChart();
+      await initTicker();
+      initModels();
+      initWallet();
+      renderChain();
+      await runPrediction();
+
+      // Refresh dashboard data every 10s
+      setInterval(async () => {
+        if (document.getElementById('page-dashboard').classList.contains('active')) {
+          await initTicker();
+          await initLiveChart();
+        }
+      }, 10000);
+    });
+  </script>
+</body>
+
+</html>
