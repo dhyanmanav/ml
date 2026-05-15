@@ -515,9 +515,12 @@ class Handler(SimpleHTTPRequestHandler):
             return self._json({"error": str(exc)}, 500)
 
 
+import os
+
 def main():
     host = "0.0.0.0"
-    port = 5000
+    port = int(os.environ.get("PORT", 5000))
+
     server = ThreadingHTTPServer((host, port), Handler)
     print(f"Serving model-backed app at http://{host}:{port}")
     server.serve_forever()
